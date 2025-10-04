@@ -219,20 +219,24 @@ func extractPDFUrls(input string) []string {
 
 // Performs HTTP GET request and returns response body as string
 func getDataFromURL(uri string) string {
-	log.Println("Scraping", uri)   // Log which URL is being scraped
-	response, err := http.Get(uri) // Send GET request
+	log.Println("Scraping", uri) // Log which URL is being scraped
+
+	response, err := http.Get(uri)
 	if err != nil {
-		log.Println(err) // Log if request fails
+		log.Println("Request failed:", err)
+		return "" // Return empty string (or handle differently)
+	}
+	defer func() {
+		if cerr := response.Body.Close(); cerr != nil {
+			log.Println("Error closing body:", cerr)
+		}
+	}()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		log.Println("Error reading body:", err)
+		return ""
 	}
 
-	body, err := io.ReadAll(response.Body) // Read the body of the response
-	if err != nil {
-		log.Println(err) // Log read error
-	}
-
-	err = response.Body.Close() // Close response body
-	if err != nil {
-		log.Println(err) // Log error during close
-	}
-	return string(body) // Return response body as string
+	return string(body)
 }
